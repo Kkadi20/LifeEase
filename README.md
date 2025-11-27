@@ -1,44 +1,56 @@
-LifeEase - Student Productivity & Wellness Application
+**LifeEase - Student Productivity & Wellness Application
+
 A full-stack web application helping students manage tasks, events, journals, and mental wellness.
+
 Live Demo:[https://life-ease-zeta.vercel.app]
 
 About
 LifeEase is a comprehensive productivity application designed for students to manage academic and personal responsibilities while supporting mental wellness through mood tracking and journaling.
+
 Built with: React, Node.js, Express, MongoDB, TailwindCSS
 
- Features
+ ***Features
+ 
 Task Management - Create, edit, and delete tasks with priorities and recurring options
+
  Event Calendar - Schedule and track important dates
+ 
  Personal Journal - Write and manage daily reflections
+ 
  Mood Tracker - Log emotional states (great, good, okay, bad, terrible)
+ 
  Analytics Dashboard - View productivity stats, mood trends, and activity streaks
+ 
  Interactive Calendar - Visual monthly overview with clickable date previews
+ 
  Dark Mode - Toggle between light and dark themes
+ 
  Browser Notifications - Reminders for upcoming tasks and events
+ 
 Secure Authentication - JWT-based login/registration
 
- Tech Stack
-Layer
-Technology
-Frontend
-React 18, Vite, TailwindCSS
-Backend
-Node.js, Express
-Database
-MongoDB (Mongoose ODM)
-Authentication
-JWT, bcryptjs
-Hosting
-Vercel (Frontend), Render (Backend)
+
+ *** Tech Stack
+Layer           |          Technology
+Frontend                   React 18, Vite, TailwindCSS
+Backend                    Node.js, Express
+Database                   MongoDB (Mongoose ODM)
+Authentication             JWT, bcryptjs
+Hosting                    Vercel (Frontend), Render (Backend)
 
 
- Prerequisites
+
+ *** Prerequisites
 Before starting, ensure you have:
+
 Node.js v16+ (Download)
+
 MongoDB - Local installation OR MongoDB Atlas account
+
 Git (Download)
 
- Installation & Setup
+ ***Installation & Setup
+ 
 Step 1: Clone Repository
 
 ```
@@ -56,12 +68,7 @@ cp .env.example .env
 ```
 Edit .env:
 env
-PORT=5000
-MONGODB_URI=mongodb://localhost:27017/lifeease
-JWT_SECRET=your_secret_key_change_this
-NODE_ENV=development
-For MongoDB Atlas: Replace MONGODB_URI with your connection string:
-mongodb+srv://username:password@cluster.mongodb.net/lifeease
+
 Step 3: Frontend Setup
 ```
 cd ../frontend
@@ -74,40 +81,59 @@ cd backend
 npm run dev
 ```
 Expected output:
+
 ✅ MongoDB Connected Successfully
+
 🚀 Server running on http://localhost:5000
+
 Terminal 2 - Frontend:
 ```
 cd frontend
 npm run dev
 ```
 Expected output:
+
  ➜  Local:   http://localhost:5173/
+ 
 Step 5: Access Application
+
 Open browser: http://localhost:5173
 
- API Endpoints
+ ***API Endpoints
 Authentication
+
 POST /api/auth/register - Register user
+
 POST /api/auth/login - Login user
+
 Protected Endpoints (Require JWT)
+
 GET/POST/PUT/DELETE /api/tasks - Task CRUD
+
 GET/POST/PUT/DELETE /api/events - Event CRUD
+
 GET/POST/PUT/DELETE /api/journal - Journal CRUD
+
 GET/POST/PUT/DELETE /api/mood - Mood CRUD
+
 GET /api/analytics/dashboard - Analytics data
+
 Authorization Header:
+
 Authorization: Bearer <your_jwt_token>
 
 
-Documentation
+***Documentation
 SRS Document: [https://docs.google.com/document/d/1xUXmgvYHJaGZD0M-FcRqBUWrjXE8ZGkw6aK6wE9y0ro/edit?usp=sharing]
+
 API Documentation: See API Endpoints section above
 
 
- Author
-Kadi Matou Koita
+ ***Author
+by Kadi Matou Koita
 
- Acknowledgments
+ ***Acknowledgments
+ 
 MongoDB Atlas (Database hosting)
+
 Vercel & Render (Application hosting)
