@@ -2,6 +2,8 @@ import { useState } from 'react';
 
 const Calendar = ({ tasks = [], events = [], moods = [] }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [showPreview, setShowPreview] = useState(false);
 
     const getDaysInMonth = (date) => {
         const year = date.getFullYear();
@@ -14,14 +16,27 @@ const Calendar = ({ tasks = [], events = [], moods = [] }) => {
         return { daysInMonth, startingDayOfWeek, year, month };
     };
 
-    const getActivityForDate = (date) => {
+    const getDataForDate = (date) => {
         const dateStr = date.toISOString().split('T')[0];
         
-        const hasTasks = tasks.some(t => t.date.split('T')[0] === dateStr);
-        const hasEvents = events.some(e => e.date.split('T')[0] === dateStr);
-        const hasMoods = moods.some(m => m.createdAt.split('T')[0] === dateStr);
+        const dayTasks = tasks.filter(t => t.date.split('T')[0] === dateStr);
+        const dayEvents = events.filter(e => e.date.split('T')[0] === dateStr);
+        const dayMood = moods.find(m => m.createdAt.split('T')[0] === dateStr);
 
-        return { hasTasks, hasEvents, hasMoods };
+        return { tasks: dayTasks, events: dayEvents, mood: dayMood };
+    };
+
+    const handleDateClick = (date) => {
+        const data = getDataForDate(date);
+        if (data.tasks.length > 0 || data.events.length > 0 || data.mood) {
+            setSelectedDate({ date, data });
+            setShowPreview(true);
+        }
+    };
+
+    const closePreview = () => {
+        setShowPreview(false);
+        setSelectedDate(null);
     };
 
     const renderCalendar = () => {
@@ -39,20 +54,34 @@ const Calendar = ({ tasks = [], events = [], moods = [] }) => {
         for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(year, month, day);
             const isToday = date.toDateString() === today.toDateString();
-            const { hasTasks, hasEvents, hasMoods } = getActivityForDate(date);
+            const { tasks: dayTasks, events: dayEvents, mood: dayMood } = getDataForDate(date);
+            
+            const hasTasks = dayTasks.length > 0;
+            const hasEvents = dayEvents.length > 0;
+            const hasMood = !!dayMood;
+            const hasActivity = hasTasks || hasEvents || hasMood;
 
             days.push(
                 <div
                     key={day}
+                    onClick={() => handleDateClick(date)}
                     className={`calendar-day ${isToday ? 'today' : ''} ${
-                        hasTasks || hasEvents || hasMoods ? 'has-activity' : ''
+                        hasActivity ? 'has-activity clickable' : ''
                     }`}
                 >
                     <div className="day-number">{day}</div>
-                    <div className="activity-dots">
-                        {hasTasks && <span className="dot task-dot" title="Has tasks">📋</span>}
-                        {hasEvents && <span className="dot event-dot" title="Has events">📅</span>}
-                        {hasMoods && <span className="dot mood-dot" title="Mood logged">😊</span>}
+                    <div className="activity-indicators">
+                        {hasTasks && <span className="indicator task-indicator" title="Tasks">•</span>}
+                        {hasEvents && <span className="indicator event-indicator" title="Events">•</span>}
+                        {hasMood && (
+                            <span className="indicator mood-indicator" title="Mood logged">
+                                {dayMood.mood === 'great' && '😄'}
+                                {dayMood.mood === 'good' && '😊'}
+                                {dayMood.mood === 'okay' && '😐'}
+                                {dayMood.mood === 'bad' && '😔'}
+                                {dayMood.mood === 'terrible' && '😢'}
+                            </span>
+                        )}
                     </div>
                 </div>
             );
@@ -74,39 +103,51 @@ const Calendar = ({ tasks = [], events = [], moods = [] }) => {
         'July', 'August', 'September', 'October', 'November', 'December'
     ];
 
+    const moodEmojis = {
+        great: '😄',
+        good: '😊',
+        okay: '😐',
+        bad: '😔',
+        terrible: '😢'
+    };
+
     return (
-        <div className="calendar-container bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="calendar-header flex justify-between items-center mb-4">
+        <div className="calendar-container bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+            {/* Calendar Header */}
+            <div className="calendar-header flex justify-between items-center mb-6">
                 <button
                     onClick={previousMonth}
-                    className="px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600"
+                    className="px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
                 >
-                    ←
+                    ◀
                 </button>
-                <h2 className="text-xl font-bold text-gray-800 dark:text-white">
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
                     {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
                 </h2>
                 <button
                     onClick={nextMonth}
-                    className="px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600"
+                    className="px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
                 >
-                    →
+                    ▶
                 </button>
             </div>
 
-            <div className="calendar-weekdays grid grid-cols-7 gap-1 mb-2">
+            {/* Weekday Headers */}
+            <div className="calendar-weekdays grid grid-cols-7 gap-2 mb-3">
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                    <div key={day} className="text-center font-semibold text-gray-600 dark:text-gray-400 text-sm">
+                    <div key={day} className="text-center font-bold text-gray-700 dark:text-gray-300 text-sm py-2">
                         {day}
                     </div>
                 ))}
             </div>
 
-            <div className="calendar-grid grid grid-cols-7 gap-1">
+            {/* Calendar Grid */}
+            <div className="calendar-grid grid grid-cols-7 gap-2 mb-6">
                 {renderCalendar()}
             </div>
 
-            <div className="calendar-legend mt-4 flex flex-wrap gap-4 text-sm">
+            {/* Legend */}
+            <div className="calendar-legend flex flex-wrap gap-4 text-sm border-t dark:border-gray-700 pt-4">
                 <div className="flex items-center gap-2">
                     <span className="w-3 h-3 bg-blue-500 rounded-full"></span>
                     <span className="text-gray-600 dark:text-gray-400">Tasks</span>
@@ -116,23 +157,121 @@ const Calendar = ({ tasks = [], events = [], moods = [] }) => {
                     <span className="text-gray-600 dark:text-gray-400">Events</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 bg-yellow-500 rounded-full"></span>
-                    <span className="text-gray-600 dark:text-gray-400">Mood</span>
+                    <span className="text-lg">😊</span>
+                    <span className="text-gray-600 dark:text-gray-400">Mood Logged</span>
                 </div>
             </div>
+
+            {/* Date Preview Popup */}
+            {showPreview && selectedDate && (
+                <div className="preview-overlay fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={closePreview}>
+                    <div className="preview-popup bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+                        {/* Popup Header */}
+                        <div className="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-800 dark:text-white">
+                                    📅 {selectedDate.date.toLocaleDateString('en-US', { 
+                                        weekday: 'long',
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
+                                    })}
+                                </h3>
+                            </div>
+                            <button
+                                onClick={closePreview}
+                                className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-2xl"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        {/* Tasks Section */}
+                        {selectedDate.data.tasks.length > 0 && (
+                            <div className="mb-4">
+                                <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                                    📋 Tasks ({selectedDate.data.tasks.length})
+                                </h4>
+                                <ul className="space-y-2">
+                                    {selectedDate.data.tasks.map((task) => (
+                                        <li key={task._id} className="flex items-start gap-2 text-sm">
+                                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                                task.priority === 'high' ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300' :
+                                                task.priority === 'medium' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300' :
+                                                'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                                            }`}>
+                                                {task.priority}
+                                            </span>
+                                            <span className="text-gray-700 dark:text-gray-300">{task.title}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {/* Events Section */}
+                        {selectedDate.data.events.length > 0 && (
+                            <div className="mb-4">
+                                <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                                    📅 Events ({selectedDate.data.events.length})
+                                </h4>
+                                <ul className="space-y-2">
+                                    {selectedDate.data.events.map((event) => (
+                                        <li key={event._id} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
+                                            <span>•</span>
+                                            <span>{event.title}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {/* Mood Section */}
+                        {selectedDate.data.mood && (
+                            <div className="mb-4">
+                                <h4 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                    Mood
+                                </h4>
+                                <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                                    <span className="text-3xl">{moodEmojis[selectedDate.data.mood.mood]}</span>
+                                    <div>
+                                        <p className="text-gray-800 dark:text-white font-medium capitalize">
+                                            {selectedDate.data.mood.mood}
+                                        </p>
+                                        {selectedDate.data.mood.note && (
+                                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                                {selectedDate.data.mood.note}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Close Button */}
+                        <button
+                            onClick={closePreview}
+                            className="w-full mt-4 px-4 py-2 bg-indigo-600 dark:bg-indigo-500 text-white rounded-lg hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-colors"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <style jsx>{`
                 .calendar-day {
                     aspect-ratio: 1;
-                    border: 1px solid #e5e7eb;
-                    padding: 4px;
-                    border-radius: 8px;
+                    border: 2px solid #e5e7eb;
+                    padding: 8px;
+                    border-radius: 12px;
                     display: flex;
                     flex-direction: column;
                     align-items: center;
                     justify-content: space-between;
-                    min-height: 60px;
+                    min-height: 80px;
                     transition: all 0.2s;
+                    position: relative;
                 }
 
                 .dark .calendar-day {
@@ -145,27 +284,36 @@ const Calendar = ({ tasks = [], events = [], moods = [] }) => {
                 }
 
                 .calendar-day.today {
-                    background: #dbeafe;
+                    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
                     border-color: #3b82f6;
                     font-weight: bold;
+                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
                 }
 
                 .dark .calendar-day.today {
-                    background: #1e3a8a;
+                    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
                     border-color: #60a5fa;
                 }
 
-                .calendar-day:not(.empty):hover {
-                    background: #f3f4f6;
-                    transform: scale(1.05);
+                .calendar-day.clickable {
+                    cursor: pointer;
                 }
 
-                .dark .calendar-day:not(.empty):hover {
+                .calendar-day.clickable:hover {
+                    background: #f9fafb;
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    border-color: #6366f1;
+                }
+
+                .dark .calendar-day.clickable:hover {
                     background: #374151;
+                    border-color: #818cf8;
                 }
 
                 .day-number {
-                    font-size: 14px;
+                    font-size: 16px;
+                    font-weight: 600;
                     color: #1f2937;
                 }
 
@@ -173,15 +321,57 @@ const Calendar = ({ tasks = [], events = [], moods = [] }) => {
                     color: #f9fafb;
                 }
 
-                .activity-dots {
+                .activity-indicators {
                     display: flex;
-                    gap: 2px;
+                    gap: 4px;
+                    align-items: center;
                     flex-wrap: wrap;
                     justify-content: center;
+                    margin-top: 4px;
                 }
 
-                .dot {
-                    font-size: 12px;
+                .indicator {
+                    font-size: 16px;
+                }
+
+                .task-indicator {
+                    color: #3b82f6;
+                    font-size: 20px;
+                }
+
+                .event-indicator {
+                    color: #10b981;
+                    font-size: 20px;
+                }
+
+                .mood-indicator {
+                    font-size: 18px;
+                }
+
+                .preview-overlay {
+                    animation: fadeIn 0.2s ease-out;
+                }
+
+                .preview-popup {
+                    animation: slideUp 0.3s ease-out;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                }
+
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+
+                @keyframes slideUp {
+                    from {
+                        transform: translateY(20px);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateY(0);
+                        opacity: 1;
+                    }
                 }
             `}</style>
         </div>
